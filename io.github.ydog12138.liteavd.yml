@@ -1,0 +1,49 @@
+id: io.github.ydog12138.liteavd
+runtime: org.gnome.Platform
+runtime-version: "50"
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: liteavd
+
+finish-args:
+  # Native Wayland plus explicit X11 access for the Emulator's XWayland path.
+  - --socket=wayland
+  # Managed desktop-host Emulator launches use the session's XWayland DISPLAY.
+  - --socket=x11
+  # Focused managed guest speaker output through CPAL's PulseAudio backend.
+  - --socket=pulseaudio
+  - --share=ipc
+  # GTK rendering and the Android Emulator's KVM acceleration.
+  - --device=dri
+  - --device=kvm
+  # Google repository downloads plus localhost adb/gRPC/console sockets.
+  - --share=network
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+  env:
+    CARGO_HOME: /run/build/liteavd/cargo
+
+modules:
+  - name: liteavd
+    buildsystem: simple
+    build-commands:
+      - cargo --offline build --release --locked
+      - install -Dm755 target/release/liteavd /app/bin/liteavd
+      - install -Dm644 data/io.github.ydog12138.liteavd.desktop /app/share/applications/io.github.ydog12138.liteavd.desktop
+      - install -Dm644 data/io.github.ydog12138.liteavd.metainfo.xml /app/share/metainfo/io.github.ydog12138.liteavd.metainfo.xml
+      - install -Dm644 data/io.github.ydog12138.liteavd.svg /app/share/icons/hicolor/scalable/apps/io.github.ydog12138.liteavd.svg
+    sources:
+      - type: dir
+        path: .
+        skip:
+          - ".*"
+          - "*.md"
+          - .flatpak-builder
+          - flatpak-build
+          - build
+          - dist
+          - target
+          - docs
+      - flatpak/cargo-sources.json

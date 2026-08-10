@@ -1,0 +1,59 @@
+[package]
+name = "liteavd"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "Linux/Wayland workspace for running and controlling multiple Android Virtual Devices"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ydog12138/liteavd"
+homepage = "https://github.com/ydog12138/liteavd"
+keywords = ["android", "emulator", "wayland", "gtk"]
+categories = ["development-tools"]
+publish = false
+default-run = "liteavd"
+
+[features]
+default = ["gui"]
+gui = ["dep:glib", "dep:gtk4", "dep:libadwaita", "dep:cpal"]
+
+[[bin]]
+name = "liteavd"
+path = "src/main.rs"
+required-features = ["gui"]
+
+[dependencies]
+# core
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "io-util", "sync", "time", "net", "fs"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "gzip", "json", "stream"] }
+futures-util = "0.3"
+roxmltree = "0.20"
+sha2 = "0.10"
+sha1 = "0.10"
+md5 = "0.7"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+directories = "5"
+thiserror = "2"
+anyhow = "1"
+libc = "0.2"
+base64 = "0.22"
+ring = "0.17"
+notify = "8.2"
+memmap2 = "0.9.11"
+tonic = "0.12"
+prost = "0.13"
+prost-types = "0.13"
+
+# gui
+gtk4 = { version = "0.9", features = ["v4_14"], optional = true }
+libadwaita = { version = "0.7", features = ["v1_5"], optional = true }
+glib = { version = "0.20", optional = true }
+cpal = { version = "0.18.1", default-features = false, features = ["pulseaudio"], optional = true }
+
+[build-dependencies]
+tonic-build = "0.12"
+prost-build = "0.13"
+protoc-bin-vendored = "3"

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 liteavd contributors -->
+<component type="desktop-application">
+  <id>io.github.ydog12138.liteavd</id>
+  <name>liteavd</name>
+  <summary>Local Android multi-device workspace for Linux</summary>
+  <developer id="io.github.ydog12138">
+    <name>liteavd contributors</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <url type="homepage">https://github.com/ydog12138/liteavd</url>
+  <url type="bugtracker">https://github.com/ydog12138/liteavd/issues</url>
+  <url type="vcs-browser">https://github.com/ydog12138/liteavd</url>
+  <description>
+    <p>
+      liteavd runs official Android Virtual Devices side by side in a native
+      GTK workspace. Each managed device has an embedded low-latency viewport,
+      isolated input focus, and explicit per-device operation results.
+    </p>
+    <p>
+      It can adopt an existing Android SDK or prepare a private SDK without
+      Java tooling after showing the applicable Google license. Resource-aware
+      scheduling keeps console ports, launch concurrency, memory, and GPU use
+      explicit.
+    </p>
+    <p>
+      The standard audio socket plays only the focused managed device's guest
+      speaker stream. A focused device can receive a WAV file or host microphone
+      through an explicit, default-off virtual microphone action; host input is
+      never opened implicitly.
+    </p>
+    <p>
+      This is a pre-alpha build intended for testing and feedback, not a stable
+      production release.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.ydog12138.liteavd.desktop</launchable>
+  <provides>
+    <binary>liteavd</binary>
+  </provides>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <content_rating type="oars-1.1"/>
+  <branding>
+    <color type="primary" scheme_preference="light">#2765D9</color>
+    <color type="primary" scheme_preference="dark">#8EB4FF</color>
+  </branding>
+  <releases>
+    <release version="0.1.0" date="2026-08-10" type="development">
+      <description>
+        <p>
+          Initial pre-alpha with a multi-device workspace, embedded share-vid
+          viewports, authenticated input, audio focus, explicit virtual
+          microphone sources, APK and file deployment, snapshots, logs, and a
+          zero-Java managed SDK path.
+        </p>
+      </description>
+    </release>
+  </releases>
+</component>

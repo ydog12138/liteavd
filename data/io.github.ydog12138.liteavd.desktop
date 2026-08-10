@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=liteavd
+Comment=Run and control multiple Android virtual devices
+Exec=liteavd
+Icon=io.github.ydog12138.liteavd
+Terminal=false
+Type=Application
+Categories=Development;
+Keywords=Android;AVD;Emulator;Testing;Wayland;
+StartupNotify=true

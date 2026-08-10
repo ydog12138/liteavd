@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_INCREMENTAL: "0"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  core-msrv:
+    name: Core only / Rust 1.88
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install declared minimum Rust
+        run: rustup toolchain install 1.88.0 --profile minimal --component clippy
+
+      - name: Reject GUI dependencies in the core graph
+        run: |
+          dependency_tree="$(cargo +1.88.0 tree --locked --no-default-features -e normal --prefix none)"
+          if printf '%s\n' "$dependency_tree" \
+            | grep -E '^(gtk4|libadwaita|glib|gdk4|gsk4|pango|cairo-rs) '; then
+            echo "GUI dependency leaked into the core-only graph" >&2
+            exit 1
+          fi
+
+      - name: Test core-only surface
+        run: cargo +1.88.0 test --locked --no-default-features --lib
+
+      - name: Lint core-only surface
+        run: cargo +1.88.0 clippy --locked --no-default-features --lib -- -D warnings
+
+  gui-quality:
+    name: GUI / format, tests and strict Clippy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install GUI and build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            libgtk-4-dev libadwaita-1-dev libasound2-dev xvfb
+
+      - name: Install stable Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy,rustfmt
+          rustup default stable
+
+      - name: Enforce formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run hermetic default tests
+        run: cargo test --locked --all-targets
+
+      - name: Run synthetic GUI smoke
+        run: xvfb-run -a cargo test --locked --test gui_viewport_smoke -- --ignored
+
+      - name: Run settings environment-override smoke
+        run: >-
+          xvfb-run -a cargo test --locked --lib
+          environment_override_is_read_only_and_invalid_load_is_visible
+          -- --ignored
+
+      - name: Enforce strict Clippy
+        run: cargo clippy --locked --all-targets --all-features -- -D warnings
+
+  flatpak-metadata:
+    name: Flatpak manifest and metadata
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            appstream desktop-file-utils flatpak-builder
+
+      - name: Validate desktop metadata
+        run: |
+          desktop-file-validate data/io.github.ydog12138.liteavd.desktop
+          appstreamcli validate --no-net data/io.github.ydog12138.liteavd.metainfo.xml
+
+      - name: Parse Flatpak manifest
+        run: flatpak-builder --show-manifest io.github.ydog12138.liteavd.yml >/dev/null

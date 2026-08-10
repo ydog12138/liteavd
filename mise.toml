@@ -1,0 +1,13 @@
+min_version = "2026.7.17"
+
+[tools]
+rust = { version = "1.97.1", components = ["clippy", "rustfmt"] }
+
+[env]
+AVDM_SDK_ROOT = "/data/Projects/liteavd-sdk"
+ANDROID_HOME = "/data/Projects/liteavd-sdk"
+ANDROID_SDK_ROOT = "/data/Projects/liteavd-sdk"
+_.path = [
+  "/data/Projects/liteavd-sdk/platform-tools",
+  "/data/Projects/liteavd-sdk/emulator",
+]

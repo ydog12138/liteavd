@@ -1,0 +1,13 @@
+/target
+
+# Flatpak 构建产物
+.flatpak-builder/
+build/
+dist/
+
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+#/target

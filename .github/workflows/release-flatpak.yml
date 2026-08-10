@@ -1,0 +1,70 @@
+name: Release Flatpak bundle
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-flatpak-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    name: Build draft GitHub release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install Flatpak build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            elfutils flatpak flatpak-builder librsvg2-common libxml2-utils
+
+      - name: Install build runtimes
+        run: |
+          flatpak remote-add --user --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive flathub \
+            org.gnome.Platform//50 \
+            org.gnome.Sdk//50 \
+            org.freedesktop.Sdk.Extension.rust-stable//25.08
+
+      - name: Build versioned bundle and checksum
+        run: flatpak/build-bundle.sh "${GITHUB_REF_NAME#v}"
+
+      - name: Verify bundle installation
+        run: |
+          bundle="$(find dist -maxdepth 1 -type f -name '*.flatpak' -print -quit)"
+          test -n "$bundle"
+          flatpak install --user --noninteractive "$bundle"
+          flatpak info --user io.github.ydog12138.liteavd
+          (cd dist && sha256sum --check --strict ./*.sha256)
+
+      - name: Create or refresh draft prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          assets=(dist/*.flatpak dist/*.sha256)
+          test "${#assets[@]}" -eq 2
+
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            test "$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft)" = true
+            gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "${assets[@]}" \
+              --verify-tag \
+              --draft \
+              --prerelease \
+              --generate-notes \
+              --title "liteavd $GITHUB_REF_NAME"
+          fi
