@@ -2,6 +2,14 @@
 
 All notable release changes are documented here. / 本文件记录各发布版本的重要变化。
 
+## Unreleased / 未发布
+
+### Fixed / 修复
+
+- Local Flatpak instructions now install a single-file bundle instead of
+  leaving enabled `flatpak-builder` cache remotes that can break system update
+  checks. / 本地 Flatpak 说明改为安装单文件 bundle，避免留下会导致系统更新检查报错的启用状态构建 cache remote。
+
 ## [0.1.0] - 2026-08-10
 
 First public pre-alpha release. / 首个公开 pre-alpha 预发布。

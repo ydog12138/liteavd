@@ -159,24 +159,21 @@ cargo test --locked --no-default-features --lib
 
 ## 6. Build the Flatpak locally
 
-Add Flathub if necessary, then build and install:
+Add Flathub if necessary, then build a single-file bundle and install it:
 
 ```bash
 flatpak remote-add --user --if-not-exists flathub \
   https://dl.flathub.org/repo/flathub.flatpakrepo
 
-flatpak-builder \
-  --user \
-  --force-clean \
-  --install-deps-from=flathub \
-  --install \
-  build/flatpak \
-  io.github.ydog12138.liteavd.yml
+flatpak/build-bundle.sh 0.1.0
+flatpak install --user dist/liteavd-0.1.0-x86_64.flatpak
 ```
 
 The build is offline after Flatpak resolves the sources listed in
 `flatpak/cargo-sources.json`. Regenerate that file after any `Cargo.lock`
-change; see [DEVELOPMENT.md](DEVELOPMENT.md).
+change; see [DEVELOPMENT.md](DEVELOPMENT.md). Avoid `flatpak-builder --install`
+for a persistent installation because it leaves enabled remotes pointing at
+the disposable build cache.
 
 ## 7. Update and uninstall
 
@@ -197,6 +194,27 @@ The second command permanently deletes the managed SDK, AVDs, settings, logs,
 and cache in the Flatpak-private directory. Back up any required AVD data first.
 
 ## 8. Installation troubleshooting
+
+### A system updater reports `No cached summary for remote '*-origin'`
+
+An earlier `flatpak-builder --install` registered an enabled local build
+remote. If the optional debug-symbol extension is installed and is not needed,
+remove it first:
+
+```bash
+flatpak uninstall --user \
+  runtime/io.github.ydog12138.liteavd.Debug/x86_64/master
+```
+
+Keep the application installed but disable its build-only origin:
+
+```bash
+origin="$(flatpak info --user --show-origin io.github.ydog12138.liteavd)"
+flatpak remote-modify --user --disable "$origin"
+flatpak update --appstream
+```
+
+Future manual updates still work by installing a newer downloaded bundle.
 
 ### `/dev/kvm` is unavailable
 

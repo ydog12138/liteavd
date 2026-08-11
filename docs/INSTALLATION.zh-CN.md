@@ -139,16 +139,11 @@ cargo test --locked --no-default-features --lib
 flatpak remote-add --user --if-not-exists flathub \
   https://dl.flathub.org/repo/flathub.flatpakrepo
 
-flatpak-builder \
-  --user \
-  --force-clean \
-  --install-deps-from=flathub \
-  --install \
-  build/flatpak \
-  io.github.ydog12138.liteavd.yml
+flatpak/build-bundle.sh 0.1.0
+flatpak install --user dist/liteavd-0.1.0-x86_64.flatpak
 ```
 
-Flatpak 解析完 `flatpak/cargo-sources.json` 后在沙箱内离线构建。修改 `Cargo.lock` 后必须重新生成该文件，详见[开发指南](DEVELOPMENT.zh-CN.md)。
+Flatpak 解析完 `flatpak/cargo-sources.json` 后在沙箱内离线构建。修改 `Cargo.lock` 后必须重新生成该文件，详见[开发指南](DEVELOPMENT.zh-CN.md)。持久安装不要使用 `flatpak-builder --install`，它会留下指向临时构建 cache 的启用状态 remote。
 
 ## 7. 更新与卸载
 
@@ -167,6 +162,25 @@ flatpak uninstall --user --delete-data io.github.ydog12138.liteavd
 第二条会永久删除 Flatpak 私有目录中的托管 SDK、AVD、设置、日志和 cache；请先备份需要的 AVD 数据。
 
 ## 8. 安装故障排查
+
+### 系统更新器报告 `No cached summary for remote '*-origin'`
+
+曾经执行的 `flatpak-builder --install` 注册了启用状态的本地构建 remote。如果不需要可选调试符号扩展，先将其卸载：
+
+```bash
+flatpak uninstall --user \
+  runtime/io.github.ydog12138.liteavd.Debug/x86_64/master
+```
+
+保留应用本体，只禁用它的构建专用 origin：
+
+```bash
+origin="$(flatpak info --user --show-origin io.github.ydog12138.liteavd)"
+flatpak remote-modify --user --disable "$origin"
+flatpak update --appstream
+```
+
+以后仍可通过安装新下载的 bundle 手动更新。
 
 ### `/dev/kvm` 不可用
 

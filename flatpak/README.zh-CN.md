@@ -7,17 +7,13 @@
 ## 本地构建
 
 ```bash
-flatpak-builder \
-  --user \
-  --force-clean \
-  --install-deps-from=flathub \
-  --install \
-  build/flatpak \
-  io.github.ydog12138.liteavd.yml
-
+flatpak/build-bundle.sh 0.1.0
+flatpak install --user dist/liteavd-0.1.0-x86_64.flatpak
 flatpak run io.github.ydog12138.liteavd
 flatpak info --show-permissions io.github.ydog12138.liteavd
 ```
+
+本地安装也应使用单文件 bundle，不要用 `flatpak-builder --install` 作为持久开发安装：它会注册指向 `.flatpak-builder/cache` 的启用状态本地 remote，并另外创建调试符号 remote。清理构建 cache 后，系统更新工具查询这些 remote 会失败。安装 bundle 时 Flatpak 会创建 disabled、non-enumerated origin；后续仍通过安装新 bundle 更新。
 
 元数据检查：
 
@@ -35,12 +31,7 @@ python3 flatpak-cargo-generator.py Cargo.lock -o flatpak/cargo-sources.json
 
 ## GitHub Releases
 
-Flatpak 是唯一发布包格式；当前通过 GitHub Releases 发布单文件 bundle，Flathub 暂缓。构建本地版本化 bundle：
-
-```bash
-flatpak/build-bundle.sh 0.1.0
-flatpak install --user dist/liteavd-0.1.0-x86_64.flatpak
-```
+Flatpak 是唯一发布包格式；当前通过 GitHub Releases 发布单文件 bundle，Flathub 暂缓。上述本地构建命令会同时生成版本化 bundle 和 checksum。
 
 版本必须与 `Cargo.toml` 和最新 AppStream release 一致。`v*` tag 会触发 `.github/workflows/release-flatpak.yml`：在 Ubuntu 24.04 构建、安装验证并校验 SHA-256，然后创建带 `.flatpak` 和 `.sha256` 的 draft prerelease，供维护者验收后发布。bundle 不内含 GNOME runtime；安装时会按内嵌提示从 Flathub 获取 runtime。
 

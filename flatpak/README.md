@@ -10,17 +10,19 @@ offline build.
 ## Local build
 
 ```bash
-flatpak-builder \
-  --user \
-  --force-clean \
-  --install-deps-from=flathub \
-  --install \
-  build/flatpak \
-  io.github.ydog12138.liteavd.yml
-
+flatpak/build-bundle.sh 0.1.0
+flatpak install --user dist/liteavd-0.1.0-x86_64.flatpak
 flatpak run io.github.ydog12138.liteavd
 flatpak info --show-permissions io.github.ydog12138.liteavd
 ```
+
+Use the single-file bundle for local installation. Do not use
+`flatpak-builder --install` for a persistent developer installation: it
+registers enabled local remotes backed by `.flatpak-builder/cache`, including a
+separate debug-symbol remote. System update tools can later fail when they ask
+those build-only remotes for a cached summary. Installing the bundle creates a
+disabled, non-enumerated origin instead, while updates remain available by
+installing a newer downloaded bundle.
 
 Static metadata checks also run in CI:
 
@@ -45,13 +47,8 @@ python3 flatpak-cargo-generator.py Cargo.lock -o flatpak/cargo-sources.json
 ## GitHub Releases
 
 Flatpak is the only package format. For the current pre-alpha phase, GitHub
-Releases is the distribution channel; Flathub submission is deferred. Build a
-versioned bundle and checksum locally with:
-
-```bash
-flatpak/build-bundle.sh 0.1.0
-flatpak install --user dist/liteavd-0.1.0-x86_64.flatpak
-```
+Releases is the distribution channel; Flathub submission is deferred. The
+local build command above produces both the versioned bundle and its checksum.
 
 The version must match both `Cargo.toml` and the newest AppStream release. A
 `v*` tag starts `.github/workflows/release-flatpak.yml`, rebuilds the bundle on
